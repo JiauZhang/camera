@@ -1,0 +1,89 @@
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc: In member function ‘void ORB_SLAM::ORBextractor::ComputeKeyPoints(std::vector<std::vector<cv::KeyPoint> >&)’:
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc:607:63: error: ‘FAST’ was not declared in this scope
+                 FAST(cellImage,cellKeyPoints[i][j],fastTh,true);
+                                                               ^
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc:616:34: error: ‘ORB’ has not been declared
+                 if( scoreType == ORB::HARRIS_SCORE )
+                                  ^
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc:683:17: error: ‘KeyPointsFilter’ has not been declared
+                 KeyPointsFilter::retainBest(keysCell,nToRetain[i][j]);
+                 ^
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc:699:13: error: ‘KeyPointsFilter’ has not been declared
+             KeyPointsFilter::retainBest(keypoints,nDesiredFeatures);
+             ^
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc: In member function ‘void ORB_SLAM::ORBextractor::operator()(cv::InputArray, cv::InputArray, std::vector<cv::KeyPoint>&, cv::OutputArray)’:
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc:760:82: error: ‘GaussianBlur’ was not declared in this scope
+         GaussianBlur(workingMat, workingMat, Size(7, 7), 2, 2, BORDER_REFLECT_101);
+                                                                                  ^
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc: In member function ‘void ORB_SLAM::ORBextractor::ComputePyramid(cv::Mat, cv::Mat)’:
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc:800:78: error: ‘INTER_LINEAR’ was not declared in this scope
+             resize(mvImagePyramid[level-1], mvImagePyramid[level], sz, 0, 0, INTER_LINEAR);
+                                                                              ^
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc:800:90: error: ‘resize’ was not declared in this scope
+             resize(mvImagePyramid[level-1], mvImagePyramid[level], sz, 0, 0, INTER_LINEAR);
+                                                                                          ^
+/home/linux/catkin_ws/src/ORB_SLAM/src/ORBextractor.cc:803:80: error: ‘INTER_NEAREST’ was not declared in this scope
+                 resize(mvMaskPyramid[level-1], mvMaskPyramid[level], sz, 0, 0, INTER_NEAREST);
+                                                                                ^
+make[2]: *** [CMakeFiles/ORB_SLAM.dir/src/ORBextractor.cc.o] 错误 1
+make[1]: *** [CMakeFiles/ORB_SLAM.dir/all] 错误 2
+make: *** [all] 错误 2
+
+ORBextractor.cc中添加:
+	/*2018-12-15*/
+	#include <opencv2/features2d.hpp>
+	#include <opencv2/imgproc.hpp>
+	/*2018-12-15*/
+
+根据Tracking.cc
+ORB_SLAM订阅的是/camera/image_raw topic
+所以这里需要自己实现OpenCV采集USB摄像头图像信息,并发布到对应的topic上
+
+
+
+CMakeFiles/usb_camera.dir/src/usb_camera.cpp.o：在函数‘main’中：
+usb_camera.cpp:(.text+0x2ee)：对‘cv::imshow(cv::String const&, cv::_InputArray const&)’未定义的引用
+CMakeFiles/usb_camera.dir/src/usb_camera.cpp.o：在函数‘cv::String::String(char const*)’中：
+usb_camera.cpp:(.text._ZN2cv6StringC2EPKc[_ZN2cv6StringC5EPKc]+0x3d)：对‘cv::String::allocate(unsigned int)’未定义的引用
+CMakeFiles/usb_camera.dir/src/usb_camera.cpp.o：在函数‘cv::String::~String()’中：
+usb_camera.cpp:(.text._ZN2cv6StringD2Ev[_ZN2cv6StringD5Ev]+0xd)：对‘cv::String::deallocate()’未定义的引用
+collect2: error: ld returned 1 exit status
+make[2]: *** [/home/linux/catkin_ws/devel/lib/usb_camera/usb_camera] 错误 1
+make[1]: *** [usb_camera/CMakeFiles/usb_camera.dir/all] 错误 2
+make: *** [all] 错误 2
+
+没有吧OpenCV的库加入链接中
+target_link_libraries(usb_camera ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+
+/usr/bin/ld: warning: libopencv_core.so.3.1, needed by /usr/local/lib/libopencv_videoio.so.3.1.0, may conflict with libopencv_core.so.2.4
+
+
+卸载OpenCV3.1.0
+cd OpenCV3.1.0/build
+sudo make uninstall
+
+卸载OpenCV3.1.0之后就正常了,但还是有些小问题,据网上说是和OpenCV与Linux有关...
+linux@linux:~/catkin_ws$ rosrun usb_camera usb_camera 
+VIDIOC_QUERYMENU: Invalid argument
+VIDIOC_QUERYMENU: Invalid argument
+VIDIOC_QUERYMENU: Invalid argument
+HIGHGUI ERROR: V4L2: Unable to get property <unknown property string>(5) - Invalid argument
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
