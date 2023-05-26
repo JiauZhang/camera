@@ -10,25 +10,6 @@ using namespace cv;
 
 int main(int argc, char** argv) 
 { 
-
-	VideoCapture cap(0);
-
-	if(!cap.isOpened())
-	{
-		cout << "open camera failed!" << endl;
-		return -1;
-	}
-	
-	double cam_fps = cap.get(CV_CAP_PROP_FPS);
-	double cam_width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-	double cam_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-	
-	cout << "cam_fps: " << cam_fps << endl;
-	cout << "cam_width: " << cam_width << endl;
-	cout << "cam_height: " << cam_height << endl;	
-
-
-
 	ros::init(argc, argv, "image_publisher"); 
 	ros::NodeHandle nh; 
 	image_transport::ImageTransport it(nh); 
@@ -38,27 +19,34 @@ int main(int argc, char** argv)
 	cv_bridge::CvImage out_msg; 
 	ros::Rate loop_rate(30); 
 
+	VideoCapture cap(0);
+	if (!cap.isOpened())
+	{
+		ROS_ERROR("Failed to open camera!");
+		return -1;
+	}
+
+	double cam_fps = cap.get(CAP_PROP_FPS);
+	double cam_width = cap.get(CAP_PROP_FRAME_WIDTH);
+	double cam_height = cap.get(CAP_PROP_FRAME_HEIGHT);
+	
+	ROS_INFO("cam_fps: %.2f", cam_fps);
+	ROS_INFO("cam_width: %.2f", cam_width);
+	ROS_INFO("cam_height: %.2f", cam_height);
+
 	while (nh.ok() && key != 27) { 
+		cap >> image;
 
-			cap>>image;
+		out_msg.header.stamp = ros::Time::now(); 
+		out_msg.encoding = cv_bridge::ENCODING_BGR8; 
+		out_msg.image = image; 
+		pub.publish(out_msg.toImageMsg()); 
 
-			out_msg.header.stamp = ros::Time::now(); 
-			out_msg.encoding = sensor_msgs::image_encodings::BGR8; 
-			out_msg.image = image; 
-			pub.publish(out_msg.toImageMsg()); 
+		cv::imshow("image", out_msg.image); 
 
-			cv::imshow("image", out_msg.image); 
-
-			key = cv::waitKey(1); 
-			loop_rate.sleep(); 
+		key = cv::waitKey(1); 
+		loop_rate.sleep(); 
 	} 
+
 	return 0;
 }
-
-
-
-
-
-
-
-
